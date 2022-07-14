@@ -27,7 +27,6 @@ public class Task implements Runnable {
         long nextPosition = startPosition;
         int noOfBytesRead = BUFFER_SIZE;
         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-        String str;
         byte tmp = 0; // Hope utf-8 encoding
 
         try {

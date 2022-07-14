@@ -1,9 +1,16 @@
+
+import java.util.stream.Stream;
+
 public class UniqueIpArray {
     private static final int ArraySize = 134217728; // 2^32 / 32
+    private static final int MutexSize = 1024;
     private final int[] array;
+
+    private final Object[] mutexes;
 
     public UniqueIpArray() {
         array = new int[ArraySize];
+        mutexes = Stream.generate(Object::new).limit(MutexSize).toArray();
     }
 
     public long getCount() {
@@ -22,8 +29,9 @@ public class UniqueIpArray {
     public void addIp(long ip) {
         int index = Math.toIntExact(ip / 32);
         int flag = 1 << Math.toIntExact(ip % 32);
+        int mutexIndex = Math.toIntExact(ip % MutexSize);
         if ((array[index] & flag) == 0) {
-            synchronized (this) {
+            synchronized (mutexes[mutexIndex]) {
                 array[index] |= flag;
             }
         }
