@@ -1,6 +1,6 @@
 public class UniqueIpArray {
     private static final int ArraySize = 134217728; // 2^32 / 32
-    private int[] array;
+    private final int[] array;
 
     public UniqueIpArray() {
         array = new int[ArraySize];
@@ -22,8 +22,8 @@ public class UniqueIpArray {
     public void addIp(long ip) {
         int index = Math.toIntExact(ip / 32);
         int bitIndex = Math.toIntExact(ip % 32);
-        synchronized (this) {
+        //synchronized (this) { // Ten times faster without synchronization
             array[index] |= 1 << bitIndex;
-        }
+        //}
     }
 }
