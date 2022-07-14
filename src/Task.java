@@ -1,14 +1,16 @@
-import java.io.EOFException;
-import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 public class Task implements Runnable {
-    private long startPosition;
-    private long endPosition;
-    private RandomAccessFile fileAccess;
-    private UniqueIpArray ipCounter;
+    private final long startPosition;
+    private final long endPosition;
+    private final RandomAccessFile fileAccess;
+    private final UniqueIpArray ipCounter;
 
     private static int count = 0;
+
+    private static final int BUFFER_SIZE = 20480;
 
     public Task(long start, long end, RandomAccessFile file, UniqueIpArray counter) {
         startPosition = start;
@@ -19,49 +21,64 @@ public class Task implements Runnable {
 
     @Override
     public void run() {
-        System.out.print("Start task " + (count++) + "\n");
+        System.out.println("Start task " + (count++));
         long ip = 0;
         int result = 0;
-        long position = startPosition;
-        int tmp;
+        long nextPosition = startPosition;
+        int noOfBytesRead = BUFFER_SIZE;
+        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+        String str;
+        byte tmp = 0; // Hope utf-8 encoding
 
         try {
-            if (startPosition != 0)
-            {
+            if (startPosition != 0) {
                 fileAccess.seek(startPosition - 1);
                 while (fileAccess.readUnsignedByte() != '\n') {
-                    position++;
+                    nextPosition++;
                 }
             }
         } catch (Exception e) {
-            System.out.print("Exception 1");
+            e.printStackTrace();
         }
+        FileChannel chanel = fileAccess.getChannel();
+
 
         try {
-            while (true) {
-                tmp = fileAccess.readUnsignedByte();
-                position++;
-                if (tmp == '.') {
-                    ip = ip * 256 + result;
-                    result = 0;
-                } else if (tmp == '\n') {
-                    ip = ip * 256 + result;
-                    ipCounter.addIp(ip);
-                    result = 0;
-                    ip = 0;
-                    if (position >= endPosition) {
-                        break;
+            while (noOfBytesRead == BUFFER_SIZE) {
+                noOfBytesRead = chanel.read(buffer);
+                buffer.flip();
+
+                while (buffer.hasRemaining()) {
+                    tmp = buffer.get();
+                    nextPosition++;
+
+                    if (tmp == '.') {
+                        //System.out.println("New Value: " + result);
+                        ip = ip * 256 + result;
+                        result = 0;
+                    } else if (tmp == '\n') {
+                        ip = ip * 256 + result;
+                        //System.out.println("New IP: " + ip);
+                        ipCounter.addIp(ip);
+                        result = 0;
+                        ip = 0;
+                        if (nextPosition >= endPosition) {
+                            return;
+                        }
+                    } else {
+                        //System.out.println("New digit: " + (tmp - '0'));
+                        result = result * 10 + (tmp - '0');
                     }
-                } else {
-                    result = result * 10 + (tmp - '0');
                 }
+                buffer.clear();
             }
-        } catch (EOFException e) {
-            ip = ip * 256 + result;
-            ipCounter.addIp(ip);
+            if (tmp != '\n') {
+                ip = ip * 256 + result;
+                ipCounter.addIp(ip);
+            }
         }
         catch (Exception e) {
-            System.out.print("Exception 2");
+            e.printStackTrace();
         }
     }
 }

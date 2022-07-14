@@ -6,24 +6,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
-    private static final long READ_LENGTH = 30485760; // TODO
+    private static final long READ_LENGTH = 3221225472L; // TODO
     public static void main(String[] args) throws IOException, InterruptedException {
         long startTime = System.currentTimeMillis();
         File file = new File("C:\\Projects\\ip_addresses");
         long fileSize = file.length();
-        long taskCount = 5;//fileSize / READ_LENGTH + 1;
-        ExecutorService service = Executors.newFixedThreadPool(5);
+        long taskCount = fileSize / READ_LENGTH + 1;
         UniqueIpArray counter = new UniqueIpArray();
-        for (int i = 0; i < taskCount; i++)
-        {
+        ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        for (int i = 0; i < taskCount; i++) {
             service.execute(new Task(i * READ_LENGTH,
                     (i + 1) * READ_LENGTH,
                     new RandomAccessFile(file, "r"),
                     counter));
         }
         service.shutdown();
-        service.awaitTermination(10, TimeUnit.MINUTES); // TODO
-        System.out.print("Unique IP address: " + counter.getCount() + "\n");
-        System.out.print("Spent time: "+ (System.currentTimeMillis() - startTime) / 1000 + "seconds\n");
+        service.awaitTermination(30, TimeUnit.MINUTES); // TODO
+
+        System.out.println("Unique IP address: " + counter.getCount());
+        System.out.println("Spent time: "+ (System.currentTimeMillis() - startTime) / 1000 + " sec");
     }
 }

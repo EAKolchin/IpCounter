@@ -19,8 +19,11 @@ public class UniqueIpArray {
         return result;
     }
 
-    public synchronized void addIp(long ip) {
+    public void addIp(long ip) {
         int index = Math.toIntExact(ip / 32);
-        array[index] |= 1 << Math.toIntExact(ip % 32);
+        int bitIndex = Math.toIntExact(ip % 32);
+        synchronized (this) {
+            array[index] |= 1 << bitIndex;
+        }
     }
 }
