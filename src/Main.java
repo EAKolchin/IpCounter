@@ -22,7 +22,9 @@ public class Main {
                     counter));
         }
         service.shutdown();
-        service.awaitTermination(30, TimeUnit.MINUTES); // TODO
+        service.awaitTermination(30, TimeUnit.MINUTES);
+
+        //new Task(0, fileSize / 100, new RandomAccessFile(file, "r"), counter).run();
 
         System.out.println("Unique IP address: " + counter.getCount());
         System.out.println("Spent time: "+ (System.currentTimeMillis() - startTime) / 1000 + " sec");
