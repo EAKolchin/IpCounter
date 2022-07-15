@@ -29,11 +29,9 @@ public class UniqueIpArray {
     public void addIp(long ip) {
         int index = Math.toIntExact(ip / 32);
         int flag = 1 << Math.toIntExact(ip % 32);
-        int mutexIndex = Math.toIntExact(ip % MutexSize);
-        if ((array[index] & flag) == 0) {
-            synchronized (mutexes[mutexIndex]) {
-                array[index] |= flag;
-            }
+        int mutexIndex = index % MutexSize;
+        synchronized (mutexes[mutexIndex]) {
+            array[index] |= flag;
         }
     }
 }
